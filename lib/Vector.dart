@@ -80,10 +80,8 @@ class Vector2 {
 		return Vector2(x - other.x, y - other.y);
 	}
 	
-	bool operator ==(other){
-		if(other is Vector2)
-			return x == other.x && y == other.y;
-		return false;
+	bool operator ==(covariant Vector2 other){
+		return x == other.x && y == other.y;
 	}
 
 	Vector2 operator-(){
@@ -199,10 +197,8 @@ class Vector3 {
 		return Vector3(x - other.x, y - other.y, z - other.z);
 	}
 
-	bool operator ==(other){
-		if(other is Vector3)
-			return x == other.x && y == other.y && z == other.z;
-		return false;
+	bool operator ==(covariant Vector3 other){
+		return x == other.x && y == other.y && z == other.z;
 	}
 
 	Vector3 operator-(){
@@ -348,10 +344,8 @@ class Vector4{
 		return Vector4(x - other.x, y - other.y, z - other.z, w + other.w);
 	}
 
-	bool operator ==(other){
-		if(other is Vector4)
-			return x == other.x && y == other.y && z == other.z && w == other.w;
-		return false;
+	bool operator ==(covariant Vector4 other){
+		return x == other.x && y == other.y && z == other.z && w == other.w;
 	}
 
 	Vector4 operator-(){
