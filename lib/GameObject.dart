@@ -1,3 +1,4 @@
+import 'dart:mirrors';
 import 'package:angular_app/Game.dart';
 
 RegExp SymbolName = RegExp(r'Symbol\("(\w+)[=]"\)');
@@ -5,23 +6,22 @@ String Function(Symbol) getName = (Symbol data) => SymbolName.firstMatch(data.to
 
 class GameObject{
   GameObject(){
-    dynamic d = this;
-    if(d.OnAwake != null)Game.OnAwake = d.OnAwake;
-    if(d.OnStart != null)Game.OnStart = d.OnStart;
-    if(d.OnEarlyUpdate != null)Game.OnEarlyUpdate = d.OnEarlyUpdate;
-    if(d.OnFixedUpdate != null)Game.OnFixedUpdate = d.OnFixedUpdate;
-    if(d.OnUpdate != null)Game.OnUpdate = d.OnUpdate;
-    if(d.OnLateUpdate != null)Game.OnLateUpdate = d.OnLateUpdate;
-    if(d.OnEarlyRender != null)Game.OnEarlyRender = d.OnEarlyRender;
-    if(d.OnRender != null)Game.OnRender = d.OnRender;
-    if(d.OnLateRender != null)Game.OnLateRender = d.OnLateRender;
-    if(d.OnGUI != null)Game.OnGUI = d.OnGUI;
-    if(d.OnQuit != null)Game.OnQuit = d.OnQuit;
-  }
+    InstanceMirror r = reflect(this);
+    var functions = r.type.instanceMembers;
+    var staticFunctions = r.type.staticMembers;
+    var staticC = reflectClass(Game);
 
-  @override
-  noSuchMethod(Invocation invocation) {
-    // TODO: implement noSuchMethod
-    return null;
+    for(var v in staticC.staticMembers.values){
+      String name = getName(v.simpleName);
+      Symbol method = Symbol(name);
+
+      if(functions.containsKey(method) || staticFunctions.containsKey(method)){
+        try{
+          staticC.setField(method, r.getField(method).reflectee);
+        }catch(identifier){
+          throw new ArgumentError("$name Does not Take the Right amount of Arguments");
+        }
+      }
+    };
   }
 } 
