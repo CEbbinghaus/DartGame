@@ -55,6 +55,7 @@ class Vector2 {
 
 	Vector2 Normalize() {
 		double m = Magnitude;
+    if(m == 0)return this;
 		x /= m;
 		y /= m;
 		return this;
@@ -68,13 +69,17 @@ class Vector2 {
 
 	Vector2 operator /(other) {
 		if (other is Vector2) return Vector2(x / other.x, y / other.y);
-		if (other is num) return Vector2(x / other, y / other);
+		if (other is num){
+      if(other == 0)return this;
+      return Vector2(x / other, y / other);
+    }
 		throw "Cannot Multiply Vector3 with ${other.runtimeType}";
 	}
 
 	Vector2 operator +(Vector2 other) {
 		return Vector2(x + other.x, y + other.y);
 	}
+
 
 	Vector2 operator -(Vector2 other) {
 		return Vector2(x - other.x, y - other.y);
@@ -171,6 +176,7 @@ class Vector3 {
 
 	Vector3 Normalize() {
 		double m = Magnitude;
+    if(m == 0)return this;
 		x /= m;
 		y /= m;
 		z /= m;
@@ -185,7 +191,10 @@ class Vector3 {
 
 	Vector3 operator /(other) {
 		if (other is Vector3) return Vector3(x / other.x, y / other.y, z / other.z);
-		if (other is num) return Vector3(x / other, y / other, z / other);
+		if (other is num){
+      if(other == 0)return this;
+      return Vector3(x / other, y / other, z / other);
+    }
 		throw "Cannot Multiply Vector3 with ${other.runtimeType}";
 	}
 
@@ -318,6 +327,7 @@ class Vector4{
 
 	Vector4 Normalize() {
 		double m = Magnitude;
+    if(m == 0)return this;
 		x /= m;
 		y /= m;
 		z /= m;
@@ -332,7 +342,10 @@ class Vector4{
 
 	Vector4 operator /(other) {
 		if (other is Vector4) return Vector4(x / other.x, y / other.y, z / other.z, w / other.w);
-		if (other is num) return Vector4(x / other, y / other, z / other, w / other);
+		if (other is num){
+      if(other == 0)return this;
+      return Vector4(x / other, y / other, z / other, w / other);
+    }
 		throw "Cannot Multiply Vector4 with ${other.runtimeType}";
 	}
 

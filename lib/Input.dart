@@ -74,9 +74,11 @@ class Mouse extends GameObject{
 
   static Vector2 _position = Vector2();
   static Vector2 _delta = Vector2();
-  static bool _isDown = false;
 
-  static bool get pressed => _isDown;
+  static List<bool> _buttons = List<bool>.filled(MouseButton.Count.index, false);
+  static List<bool> _pressed = List<bool>.filled(MouseButton.Count.index, false);
+  static List<bool> _released = List<bool>.filled(MouseButton.Count.index, false);
+
   static double get x => _position.x;
   static double get y => _position.y;
   static double get dx => _delta.x;
@@ -91,16 +93,25 @@ class Mouse extends GameObject{
 
     window.onMouseMove.listen(_UpdateMousePosition);
 
-    window.onMouseUp.listen((data) => {_isDown = false});
-    window.onMouseDown.listen((data) => {_isDown = true});
+    window.onMouseUp.listen((data) => _UpdateMouseButtons(false, data));
+    window.onMouseDown.listen((data) => _UpdateMouseButtons(true, data));
 
-    Game.OnUpdate = _Clear;
+    Game.OnLateUpdate(_Clear);
 
     return Mouse._Instance;
   }
 
   static void _Clear(){
     _delta = Vector2.zero;
+    _pressed = List<bool>.filled(MouseButton.Count.index, false);
+    _released = List<bool>.filled(MouseButton.Count.index, false);
+  }
+
+  static void _UpdateMouseButtons(bool state, MouseEvent evt){
+    int button = evt.button;
+    if(_buttons[button] && !state)_released[button] = true;
+    if(!_buttons[button] && state)_pressed[button] = true;
+    _buttons[button] = state;
   }
 
   static void _UpdateMousePosition(MouseEvent evt){
@@ -141,7 +152,8 @@ class Keyboard extends GameObject{
 	List<bool> pressed = List<bool>.filled(256, false);
 	List<bool> released = List<bool>.filled(256, false);
 
-	void OnUpdate(){
+	void OnLateUpdate(){
+    //print("Update called");
 		if(Instance == null)return;
 
     anyUp = anyDown = false;
@@ -150,7 +162,7 @@ class Keyboard extends GameObject{
     released = List<bool>.filled(256, false);
 	}
 
-	static Keyboard CreateKeyManager() {
+	static Keyboard CreateKeyboard() {
 		if (Instance != null)
 			return Instance;
 
@@ -162,41 +174,37 @@ class Keyboard extends GameObject{
 
 		return Instance;
 	}
-
-	bool operator[](key) {
-    int i;
-    if(key is String)
-      i = key.codeUnitAt(0);
-    else if(key is num)
-      i = key.toInt();
-    else throw "Type ${key.runtimeType} Cannot be used for Indexing";
-		return _data[i];
-	}
-
-
-	static bool Get(String key) {
-		if (Instance == null)return false;
-    int i = key.codeUnitAt(0);
-		if (i > 96 && i < 123)
-			return Instance._data[i - 32];
-
-		return Instance._data[i];
-	}
-
-}
-
-
-class MouseCodes{
 }
 
 class Input{
   static Input _instance = Input._();
+  static Vector2 _directionVector = Vector2();
+
   Mouse mouse;
   Keyboard keyboard;
 
   Input._(){
-    Mouse.Create();
-    Keyboard.CreateKeyManager();
+    mouse = Mouse.Create();
+    keyboard = Keyboard.CreateKeyboard();
+
+    Game.OnEarlyUpdate(_UpdateData);
+  }
+
+  static void _UpdateData(){
+    Vector2 input = Vector2();
+    if(Input.GetKey(KeyCode.w)){
+      input.y += -1;
+    }
+    if(Input.GetKey(KeyCode.s)){
+      input.y += 1;
+    }
+    if(Input.GetKey(KeyCode.a)){
+      input.x += -1;
+    }
+    if(Input.GetKey(KeyCode.d)){
+      input.x += 1;
+    }
+    _directionVector = input;
   }
 
   static bool GetKeyDown(KeyCode key){
@@ -211,16 +219,43 @@ class Input{
     return _instance.keyboard._data[key.Code];
   }
 
-  static Vector2 MouseDelta(){
-    return Mouse.delta;
+  static Vector2 GetDirectionVector(){
+    return _directionVector;
   }
 
-  static Vector2 MousePosition(){
-    return Mouse.position;
+  static bool GetMouseButtonDown(MouseButton button){
+    return Mouse._pressed[button.index];
+  }
+
+  static bool GetMouseButtonUp(MouseButton button){
+    return Mouse._released[button.index];
+  }
+
+  static bool GetMouseButton(MouseButton button){
+    return Mouse._buttons[button.index];
+  }
+
+  static Vector2 GetMouseDelta(){
+    return Mouse._delta;
+  }
+
+  static Vector2 GetMousePosition(){
+    return Mouse._position;
+  }
+
+  static Input Initialize(){
+    return _instance;
   }
 }
 
-
+enum MouseButton{
+  Left,
+  Middle,
+  Right,
+  Backward,
+  Forward,
+  Count
+}
 
 enum KeyCode {
     backspace,
@@ -326,109 +361,10 @@ enum KeyCode {
     singleQuote
 }
 
-final Codes = {
-  KeyCode.backspace: 8,
-  KeyCode.tab: 9,
-  KeyCode.enter: 13,
-  KeyCode.shift: 16,
-  KeyCode.ctrl: 17,
-  KeyCode.alt: 18,
-  KeyCode.pause: 19,
-  KeyCode.capslock: 20,
-  KeyCode.escape: 27,
-  KeyCode.pageUp: 33,
-  KeyCode.space: 32,
-  KeyCode.pageDown: 34,
-  KeyCode.end: 35,
-  KeyCode.home: 36,
-  KeyCode.arrowLeft: 37,
-  KeyCode.arrowUp: 38,
-  KeyCode.arrowRight: 39,
-  KeyCode.arrowDown: 40,
-  KeyCode.prtscrn: 44,
-  KeyCode.insert: 45,
-  KeyCode.delete: 46,
-  KeyCode.num0: 48,
-  KeyCode.num1: 49,
-  KeyCode.num2: 50,
-  KeyCode.num3: 51,
-  KeyCode.num4: 52,
-  KeyCode.num5: 53,
-  KeyCode.num6: 54,
-  KeyCode.num7: 55,
-  KeyCode.num8: 56,
-  KeyCode.num9: 57,
-  KeyCode.a: 65,
-  KeyCode.b: 66,
-  KeyCode.c: 67,
-  KeyCode.d: 68,
-  KeyCode.e: 69,
-  KeyCode.f: 70,
-  KeyCode.g: 71,
-  KeyCode.h: 72,
-  KeyCode.i: 73,
-  KeyCode.j: 74,
-  KeyCode.k: 75,
-  KeyCode.l: 76,
-  KeyCode.m: 77,
-  KeyCode.n: 78,
-  KeyCode.o: 79,
-  KeyCode.p: 80,
-  KeyCode.q: 81,
-  KeyCode.r: 82,
-  KeyCode.s: 83,
-  KeyCode.t: 84,
-  KeyCode.u: 85,
-  KeyCode.v: 86,
-  KeyCode.w: 87,
-  KeyCode.x: 88,
-  KeyCode.y: 89,
-  KeyCode.z: 90,
-  KeyCode.lwindowKey: 91,
-  KeyCode.rwindowKey: 92,
-  KeyCode.selectKey: 93,
-  KeyCode.numpad0: 96,
-  KeyCode.numpad1: 97,
-  KeyCode.numpad2: 98,
-  KeyCode.numpad3: 99,
-  KeyCode.numpad4: 100,
-  KeyCode.numpad5: 101,
-  KeyCode.numpad6: 102,
-  KeyCode.numpad7: 103,
-  KeyCode.numpad8: 104,
-  KeyCode.numpad9: 105,
-  KeyCode.multiply: 106,
-  KeyCode.add: 107,
-  KeyCode.subtract: 109,
-  KeyCode.decimalpoint: 110,
-  KeyCode.divide: 111,
-  KeyCode.f1: 112,
-  KeyCode.f2: 113,
-  KeyCode.f3: 114,
-  KeyCode.f4: 115,
-  KeyCode.f5: 116,
-  KeyCode.f6: 117,
-  KeyCode.f7: 118,
-  KeyCode.f8: 119,
-  KeyCode.f9: 120,
-  KeyCode.f10: 121,
-  KeyCode.f11: 122,
-  KeyCode.f12: 123,
-  KeyCode.numLock: 144,
-  KeyCode.scrollLock: 145,
-  KeyCode.myComputer: 182,
-  KeyCode.myCalculator: 183,
-  KeyCode.semicolon: 186,
-  KeyCode.equalsign: 187,
-  KeyCode.comma: 188,
-  KeyCode.dash: 189,
-  KeyCode.period: 190,
-  KeyCode.forwardSlash: 191,
-  KeyCode.openBracket: 219,
-  KeyCode.backSlash: 220,
-  KeyCode.closeBraket: 221,
-  KeyCode.singleQuote: 222
-};
-extension foo on KeyCode{
-  int get Code => Codes[this];
+extension KeyExtention on KeyCode{
+  static List<int> codes = [8, 9, 13, 16, 17, 18, 19, 20, 27, 33, 32, 34, 35, 36, 37, 38, 39, 40, 44, 45, 46, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 144, 145, 182, 183, 186, 187, 188, 189, 190, 191, 219, 220, 221, 222];
+  
+  int get Code{
+    return codes[this.index];
+  }
 }

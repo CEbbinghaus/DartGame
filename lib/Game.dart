@@ -1,5 +1,8 @@
 import 'dart:async';
 import 'dart:html';
+import 'package:angular_app/GameManager.dart';
+import 'package:angular_app/GameObject.dart';
+import 'package:angular_app/Input.dart';
 import 'package:angular_app/Time.dart';
 
 class CursorData{
@@ -34,59 +37,58 @@ class _GameUpdateEventEmitter{
   static StreamController<CanvasRenderingContext2D> _guiStream = StreamController.broadcast();
   static StreamController<void> _quitStream = StreamController.broadcast();
 
-  static _runCase(Event event, Function(dynamic) callback){
+  static dynamic _runCase(Event event, Function(dynamic) callback){
     switch(event){
       case Event.awake:
-        callback(_awakeStream);
+        return callback(_awakeStream);
         break;
       case Event.start:
-        callback(_startStream);
+        return callback(_startStream);
         break;
       case Event.earlyUpdate:
-        callback(_earlyUpdateStream);
+        return callback(_earlyUpdateStream);
         break;
       case Event.fixedUpdate:
-        callback(_fixedUpdateStream);
+        return callback(_fixedUpdateStream);
         break;
       case Event.update:
-        callback(_updateStream);
+        return callback(_updateStream);
         break;
       case Event.lateUpdate:
-        callback(_lateUpdateStream);
+        return callback(_lateUpdateStream);
         break;
       case Event.earlyRender:
-        callback(_earlyRenderStream);
+        return callback(_earlyRenderStream);
         break;
       case Event.render:
-        callback(_renderStream);
+        return callback(_renderStream);
         break;
       case Event.lateRender:
-        callback(_lateRenderStream);
+        return callback(_lateRenderStream);
         break;
       case Event.gui:
-        callback(_guiStream);
+        return callback(_guiStream);
         break;
       case Event.quit:
-        callback(_quitStream);
+        return callback(_quitStream);
         break;
     }
   }
 
-  static SetStream(Event e, dynamic t){
+  static StreamSubscription SetStream(Event e, dynamic t){
     var f = (dynamic) => t();
-    _runCase(e, (dynamic s){
+    return _runCase(e, (dynamic s){
       if(
         e == Event.earlyRender ||
         e == Event.render ||
         e == Event.lateRender ||
         e == Event.gui
       ){
-        s.stream.listen(t);
+        return s.stream.listen(t);
       }else{
-        s.stream.listen(f);
+        return s.stream.listen(f);
       }
     });
-    
   }
 
   static Emit(Event e, [dynamic v = null]){
@@ -99,20 +101,20 @@ class _GameUpdateEventEmitter{
 class Game extends _GameUpdateEventEmitter{
   static Game Instance;
 
-  static void _SetStream(Event e, dynamic t) => _GameUpdateEventEmitter.SetStream(e, t);
+  static StreamSubscription _SetStream(Event e, dynamic t) => _GameUpdateEventEmitter.SetStream(e, t);
   static void _Emit(Event e, [dynamic t]) => _GameUpdateEventEmitter.Emit(e, t);
 
-  static void set OnAwake(Function f) => _SetStream(Event.awake, f);
-  static void set OnStart(Function f) => _SetStream(Event.start, f);
-  static void set OnEarlyUpdate(Function f) => _SetStream(Event.earlyUpdate, f);
-  static void set OnFixedUpdate(Function f) => _SetStream(Event.fixedUpdate, f);
-  static void set OnUpdate(Function f) => _SetStream(Event.update, f);
-  static void set OnLateUpdate(Function f) => _SetStream(Event.lateUpdate, f);
-  static void set OnEarlyRender(Function(CanvasRenderingContext2D) f) => _SetStream(Event.earlyRender, f);
-  static void set OnRender(Function(CanvasRenderingContext2D) f) => _SetStream(Event.render, f);
-  static void set OnLateRender(Function(CanvasRenderingContext2D) f) => _SetStream(Event.lateRender, f);
-  static void set OnGUI(Function(CanvasRenderingContext2D) f) => _SetStream(Event.gui, f);
-  static void set OnQuit(Function f) => _SetStream(Event.quit, f);
+  static StreamSubscription OnAwake(Function f) => _SetStream(Event.awake, f);
+  static StreamSubscription OnStart(Function f) => _SetStream(Event.start, f);
+  static StreamSubscription OnEarlyUpdate(Function f) => _SetStream(Event.earlyUpdate, f);
+  static StreamSubscription OnFixedUpdate(Function f) => _SetStream(Event.fixedUpdate, f);
+  static StreamSubscription OnUpdate(Function f) => _SetStream(Event.update, f);
+  static StreamSubscription OnLateUpdate(Function f) => _SetStream(Event.lateUpdate, f);
+  static StreamSubscription OnEarlyRender(Function(CanvasRenderingContext2D) f) => _SetStream(Event.earlyRender, f);
+  static StreamSubscription OnRender(Function(CanvasRenderingContext2D) f) => _SetStream(Event.render, f);
+  static StreamSubscription OnLateRender(Function(CanvasRenderingContext2D) f) => _SetStream(Event.lateRender, f);
+  static StreamSubscription OnGUI(Function(CanvasRenderingContext2D) f) => _SetStream(Event.gui, f);
+  static StreamSubscription OnQuit(Function f) => _SetStream(Event.quit, f);
 
   int frame = 0;
   CanvasElement canvas;
@@ -120,10 +122,13 @@ class Game extends _GameUpdateEventEmitter{
 
   Game(CanvasElement this.canvas, CanvasRenderingContext2D this.context){
     Instance = this;
-    window.requestAnimationFrame(Main);
+
+    Input.Initialize();
+    GameManager();
 
     _Emit(Event.awake);
     _Emit(Event.start);
+    window.requestAnimationFrame(Main);
   }
 
   void Main(num time){
@@ -132,14 +137,14 @@ class Game extends _GameUpdateEventEmitter{
     _Emit(Event.earlyUpdate);
     _Emit(Event.fixedUpdate);
     _Emit(Event.update);
-    _Emit(Event.lateRender);
+    _Emit(Event.lateUpdate);
 
     context.clearRect(0, 0, window.innerWidth, window.innerHeight);
 
-    _Emit(Event.earlyRender);
+    _Emit(Event.earlyRender, context);
     _Emit(Event.render, context);
-    _Emit(Event.lateRender);
-    _Emit(Event.gui);
+    _Emit(Event.lateRender, context);
+    _Emit(Event.gui, context);
 
     window.requestAnimationFrame(Main);
   }
