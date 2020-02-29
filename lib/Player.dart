@@ -15,6 +15,14 @@ class Player extends GameObject{
 
   Gun gun;
 
+  int lives = 3;
+
+  double _invinibility = 0;
+
+  bool get isInvinible{
+    return _invinibility > 0;
+  }
+
   Player(){
     transform.position = Vector2(window.innerWidth / 2, window.innerHeight / 2);
     gun = Gun(transform, ClipSize: 10, FireRate: 5, AutoReload: true);
@@ -37,8 +45,10 @@ class Player extends GameObject{
     }
 
     if(Input.GetMouseButtonDown(MouseButton.Left)){
-      if(gun.CanShoot)
+      if(gun.CanShoot){
         velocity -= (Input.GetMousePosition() - transform.position).Normalized * 3;
+        GameManager.CameraShake = 50;
+      }
 
       gun.Shoot(Input.GetMousePosition());
     }
@@ -65,8 +75,18 @@ class Player extends GameObject{
   }
 
   void OnLateRender(CanvasRenderingContext2D ctx){
-    ctx.fillStyle = "#000";
+    ctx.fillStyle = "#72e9ff";
     ctx.filter = GameManager.Inverted ? "invert(1)" : "none";
     ctx.fillRectC(transform.position, size);
+  }
+
+  void OnGUI(CanvasRenderingContext2D ctx){
+    ctx.fillStyle = "#000";
+    ctx.SetInverted();
+    ctx.fillRect(0, 0, 100, 100);
+    ctx.save();
+    ctx.globalCompositeOperation = "destination-out";
+    GameManager.spriteRender?.DrawSprite(ctx, Vector2.zero, (Time.TotalTime % 17).toInt(), size: Vector2.one * 100);
+    ctx.restore();
   }
 }

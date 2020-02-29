@@ -129,6 +129,8 @@ class Game extends _GameUpdateEventEmitter{
     _Emit(Event.awake);
     _Emit(Event.start);
     window.requestAnimationFrame(Main);
+
+    context.imageSmoothingEnabled = false;
   }
 
   void Main(num time){
@@ -141,10 +143,15 @@ class Game extends _GameUpdateEventEmitter{
 
     context.clearRect(0, 0, window.innerWidth, window.innerHeight);
 
+    context.save();
     _Emit(Event.earlyRender, context);
     _Emit(Event.render, context);
     _Emit(Event.lateRender, context);
+    context.restore();
+    
+    context.resetTransform();
     _Emit(Event.gui, context);
+    context.resetTransform();
 
     window.requestAnimationFrame(Main);
   }
