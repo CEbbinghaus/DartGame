@@ -35,7 +35,7 @@ class _GameUpdateEventEmitter{
   static StreamController<CanvasRenderingContext2D> _renderStream = StreamController.broadcast();
   static StreamController<CanvasRenderingContext2D> _lateRenderStream = StreamController.broadcast();
   static StreamController<CanvasRenderingContext2D> _guiStream = StreamController.broadcast();
-  static StreamController<void> _quitStream = StreamController.broadcast();
+  static StreamController<CanvasRenderingContext2D> _quitStream = StreamController.broadcast();
 
   static dynamic _runCase(Event event, Function(dynamic) callback){
     switch(event){
@@ -82,7 +82,8 @@ class _GameUpdateEventEmitter{
         e == Event.earlyRender ||
         e == Event.render ||
         e == Event.lateRender ||
-        e == Event.gui
+        e == Event.gui ||
+        e == Event.quit
       ){
         return s.stream.listen(t);
       }else{
@@ -114,13 +115,23 @@ class Game extends _GameUpdateEventEmitter{
   static StreamSubscription OnRender(Function(CanvasRenderingContext2D) f) => _SetStream(Event.render, f);
   static StreamSubscription OnLateRender(Function(CanvasRenderingContext2D) f) => _SetStream(Event.lateRender, f);
   static StreamSubscription OnGUI(Function(CanvasRenderingContext2D) f) => _SetStream(Event.gui, f);
-  static StreamSubscription OnQuit(Function f) => _SetStream(Event.quit, f);
+  static StreamSubscription OnQuit(Function(CanvasRenderingContext2D) f) => _SetStream(Event.quit, f);
 
   int frame = 0;
   CanvasElement canvas;
   CanvasRenderingContext2D context;
+  CanvasElement guiCanvas;
+  CanvasRenderingContext2D guiContext;
 
-  Game(CanvasElement this.canvas, CanvasRenderingContext2D this.context){
+  bool isQuitting = false;
+
+  Quit(){
+    isQuitting = true;
+  }
+
+  Game(this.canvas, this.guiCanvas){
+    this.context = canvas.getContext("2d");
+    this.guiContext = guiCanvas.getContext("2d");
     Instance = this;
 
     Input.Initialize();
@@ -131,6 +142,7 @@ class Game extends _GameUpdateEventEmitter{
     window.requestAnimationFrame(Main);
 
     context.imageSmoothingEnabled = false;
+    guiContext.imageSmoothingEnabled = false;
   }
 
   void Main(num time){
@@ -149,11 +161,18 @@ class Game extends _GameUpdateEventEmitter{
     _Emit(Event.lateRender, context);
     context.restore();
     
-    context.resetTransform();
-    _Emit(Event.gui, context);
-    context.resetTransform();
+    guiContext.clearRect(0, 0, window.innerWidth, window.innerHeight);
+    guiContext.save();
+    _Emit(Event.gui, guiContext);
+    guiContext.restore();
 
-    window.requestAnimationFrame(Main);
+    if(!isQuitting)
+      window.requestAnimationFrame(Main);
+    if(isQuitting){
+      context.clearRect(0, 0, window.innerWidth, window.innerHeight);
+      guiContext.clearRect(0, 0, window.innerWidth, window.innerHeight);
+      _Emit(Event.quit, guiContext);
+    }
   }
 }
 

@@ -5,29 +5,30 @@ import 'package:angular_app/Game.dart';
 @Component(
   selector: 'my-app',
   styles: ["canvas: {position: absolute; top: 0px; left: 0px;}"],
-  template: '<canvas></canvas>'
+  template: '<canvas id="GameCanvas"></canvas><canvas id="GuiCanvas"></canvas>'
 )
 class AppComponent implements OnInit {
   CanvasElement canvas;
-  CanvasRenderingContext2D ctx;
+  CanvasElement guiCanvas;
 
   Game game;
 
   @override
   void ngOnInit() {
-    canvas = querySelector("canvas");
-    ctx = canvas?.getContext("2d") as CanvasRenderingContext2D;
+    canvas = querySelector("#GameCanvas");
+    guiCanvas = querySelector("#GuiCanvas");
 
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    if(canvas == null || guiCanvas == null)
+      throw "Canvas Could not be Found";
+
+    guiCanvas.width = canvas.width = window.innerWidth;
+    guiCanvas.height = canvas.height = window.innerHeight;
 
     window.onResize.listen((Event){
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
+      guiCanvas.width = canvas.width = window.innerWidth;
+      guiCanvas.height = canvas.height = window.innerHeight;
     });
-
-    print((ctx != null ? "Loaded Canvas Context" : "Context Doesnt Exist"));
-    //canvas.requestPointerLock();
-    game = new Game(canvas, ctx);
+    
+    game = new Game(canvas, guiCanvas);
   }
 }

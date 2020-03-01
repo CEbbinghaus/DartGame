@@ -3,9 +3,6 @@ import 'dart:async';
 import 'package:angular_app/Game.dart';
 import 'package:angular_app/Transform.dart';
 
-RegExp SymbolName = RegExp(r'Symbol\("(\w+)[=]"\)');
-String Function(Symbol) getName = (Symbol data) => SymbolName.firstMatch(data.toString()).group(1);
-
 class GameObject{
   Transform transform;
 
@@ -59,22 +56,15 @@ class GameObject{
         if(Active)v == null ?func() : func(v);
       }catch(identifier){
         destroy(this);
-        // if(identifier is NoSuchMethodError){
-        //   NoSuchMethodError error = identifier as NoSuchMethodError;
-        //   throw ArgumentError("Missmatching Arguments on Inherited class of GameObject. Double check you added the Right Arguments to your Event functions");
-        // }else
-        //throw Exception("Exception was Thrown From Inherited GameObject Class.\n\n${identifier.toString()}");
         throw identifier;
       }
     };
     //print("$func||$v");
     return v;
-    return v;
   }
 
   @override
   noSuchMethod(Invocation invocation) {
-    // TODO: implement noSuchMethod
     return null;
   }
 } 

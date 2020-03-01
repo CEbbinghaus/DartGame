@@ -27,7 +27,6 @@ class SpriteRender{
     Rectangle<num> source = Rectangle<num>(xIndex * SpriteSize.x, yIndex * SpriteSize.y, SpriteSize.x, SpriteSize.y);
     Rectangle<num> dest = Rectangle<num>(position.x, position.y, size.x, size.y);
 
-    print("Index: $index has x of: $xIndex, and y of: $yIndex");
     ctx.drawImageScaledFromSource(e, xIndex * SpriteSize.x, yIndex * SpriteSize.y, SpriteSize.x, SpriteSize.y, position.x, position.y, size.x, size.y);
     //ctx.drawImageToRect(e, dest, sourceRect: source);
   }

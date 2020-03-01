@@ -49,7 +49,7 @@ class Enemy extends GameObject{
     transform.position += velocity * Time.OneTime;
   }
 
-  TakeDamage(Vector2 direction, double amount){
+  bool TakeDamage(Vector2 direction, double amount){
     velocity += direction * 10;
     health -= amount;
     if(health < 0){
